@@ -1,20 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import{
-  View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, TouchableOpacity
+// screens/AnalyticsScreen.js
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, ScrollView,
+  ActivityIndicator, Dimensions, TouchableOpacity
 } from 'react-native';
-import { ref, onValue } from 'firebase/database';
-import { db } from '../firebaseConfig';
+import { fetchReadings } from '../firebaseConfig';
 import { LineChart } from 'react-native-chart-kit';
 
-const screenWidth = Dimensions.get('window').width -32;
+const screenWidth = Dimensions.get('window').width - 32;
+const FILTERS = ['1H', '6H', '24H', '7D'];
 
-//Time filter options
-const FILTERS = ['1H', '6H','24H', '7D'];
-
-//Single chart card
 const ChartCard = ({ title, icon, color, data, labels, unit }) => {
-  if  (!data || data.length === 0){
-    return(
+  if (!data || data.length === 0) {
+    return (
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
           <Text style={styles.chartIcon}>{icon}</Text>
@@ -33,77 +31,53 @@ const ChartCard = ({ title, icon, color, data, labels, unit }) => {
       <View style={styles.chartHeader}>
         <Text style={styles.chartIcon}>{icon}</Text>
         <Text style={styles.chartTitle}>{title}</Text>
-        <Text style={[styles.chartLatest, { color }]}>
-          {data[data.length - 1]}{unit}
-        </Text>
+        <Text style={[styles.chartLatest, { color }]}>{data[data.length - 1]}{unit}</Text>
       </View>
       <LineChart
-        data={{
-          labels: labels,
-          datasets: [{ data, color: () => color, strokeWidth: 2 }],
-        }}
+        data={{ labels, datasets: [{ data, color: () => color, strokeWidth: 2 }] }}
         width={screenWidth}
         height={180}
         yAxisSuffix={unit}
         chartConfig={{
-          backgroundColor:      '#fff',
-          backgroundGradientFrom: '#fff',
-          backgroundGradientTo:   '#fff',
-          decimalPlaces:          1,
-          color:                  (opacity = 1) => color,
-          labelColor:             () => '#999',
-          propsForDots:           { r: '3', strokeWidth: '1', stroke: color },
+          backgroundColor: '#fff', backgroundGradientFrom: '#fff',
+          backgroundGradientTo: '#fff', decimalPlaces: 1,
+          color: () => color, labelColor: () => '#999',
+          propsForDots: { r: '3', strokeWidth: '1', stroke: color },
           propsForBackgroundLines: { stroke: '#f0f0f0' },
         }}
         bezier
         style={{ borderRadius: 8, marginTop: 8 }}
-        withInnerLines={true}
-        withOuterLines={false}
       />
     </View>
   );
 };
 
-//Main Screen
 export default function AnalyticsScreen() {
-  const [readings, setReadings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [readings, setReadings]   = useState([]);
+  const [loading, setLoading]     = useState(true);
   const [activeFilter, setFilter] = useState('24H');
 
-  useEffect(() => {
-    const readingsRef = ref(db, 'farms/busia/readings');
-    const unsubscribe = onValue(readingsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const parsed = Object.values(data).map((r) => ({
-          temperature:   r.temperature   ?? null,
-          humidity:      r.humidity      ?? null,
-          soil_moisture: r.soil_moisture ?? null,
-          light_level:   r.light_level   ?? null,
-          timestamp:     r.timestamp     ?? 0,
-        }));
-        // Sort by timestamp ascending
-        parsed.sort((a, b) => a.timestamp - b.timestamp);
-        setReadings(parsed);
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-}, []);
+  const loadData = useCallback(async () => {
+    const data = await fetchReadings();
+    setReadings(data);
+    setLoading(false);
+  }, []);
 
-// Filtering readings by time window
-const filterReadings = (data) => {
+  useEffect(() => {
+    loadData();
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
+  }, [loadData]);
+
+  const filterReadings = (data) => {
     const now = Date.now() / 1000;
     const windows = { '1H': 3600, '6H': 21600, '24H': 86400, '7D': 604800 };
-    const cutoff  = now - windows[activeFilter];
-    const filtered = data.filter((r) => r.timestamp >= cutoff);
- 
-    // Downsample to max 12 points for readable chart labels
+    const filtered = data.filter((r) => r.timestamp >= now - windows[activeFilter]);
     if (filtered.length <= 12) return filtered;
     const step = Math.floor(filtered.length / 12);
     return filtered.filter((_, i) => i % step === 0).slice(0, 12);
   };
- 
+
   const toLabels = (data) =>
     data.map((r) => {
       const d = new Date(r.timestamp * 1000);
@@ -111,12 +85,10 @@ const filterReadings = (data) => {
         ? `${d.getDate()}/${d.getMonth() + 1}`
         : `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
     });
- 
+
   const filtered = filterReadings(readings);
   const labels   = toLabels(filtered);
- 
-  const extract = (key) =>
-    filtered.map((r) => (r[key] !== null ? parseFloat(r[key].toFixed(1)) : 0));
+  const extract  = (key) => filtered.map((r) => parseFloat((r[key] ?? 0).toFixed(1)));
 
   if (loading) {
     return (
@@ -126,15 +98,14 @@ const filterReadings = (data) => {
       </View>
     );
   }
- 
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Analytics</Text>
         <Text style={styles.headerSub}>Historical sensor trends</Text>
       </View>
- 
-      {/* Time filter tabs */}
+
       <View style={styles.filterRow}>
         {FILTERS.map((f) => (
           <TouchableOpacity
@@ -142,13 +113,11 @@ const filterReadings = (data) => {
             style={[styles.filterBtn, activeFilter === f && styles.filterBtnActive]}
             onPress={() => setFilter(f)}
           >
-            <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>
-              {f}
-            </Text>
+            <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>{f}</Text>
           </TouchableOpacity>
         ))}
       </View>
- 
+
       {readings.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>📊</Text>
@@ -159,94 +128,50 @@ const filterReadings = (data) => {
         </View>
       ) : (
         <>
-          <ChartCard
-            title="Temperature"   icon="🌡️"
-            color="#ea4335"       unit="°C"
-            data={extract('temperature')}
-            labels={labels}
-          />
-          <ChartCard
-            title="Humidity"      icon="💧"
-            color="#4285f4"       unit="%"
-            data={extract('humidity')}
-            labels={labels}
-          />
-          <ChartCard
-            title="Soil Moisture" icon="🌱"
-            color="#34a853"       unit="%"
-            data={extract('soil_moisture')}
-            labels={labels}
-          />
-          <ChartCard
-            title="Light Level"   icon="☀️"
-            color="#fbbc04"       unit="%"
-            data={extract('light_level')}
-            labels={labels}
-          />
+          <ChartCard title="Temperature" icon="🌡️" color="#ea4335" unit="°C" data={extract('temperature')} labels={labels} />
+          <ChartCard title="Humidity"    icon="💧" color="#4285f4" unit="%" data={extract('humidity')}    labels={labels} />
+          <ChartCard title="Soil Moisture" icon="🌱" color="#34a853" unit="%" data={extract('soil_moisture')} labels={labels} />
+          <ChartCard title="Light Level" icon="☀️" color="#fbbc04" unit="%" data={extract('light_level')} labels={labels} />
         </>
       )}
- 
       <View style={{ height: 30 }} />
     </ScrollView>
   );
 }
 
-//Styles
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: '#f5f7fa' },
   centered:    { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loadingText: { marginTop: 12, color: '#666', fontSize: 15 },
- 
   header: {
-    backgroundColor:   '#fff',
-    padding:           20,
-    paddingTop:        50,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    backgroundColor: '#fff', padding: 20, paddingTop: 50,
+    borderBottomWidth: 1, borderBottomColor: '#eee',
   },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#1a1a1a' },
   headerSub:   { fontSize: 13, color: '#666', marginTop: 2 },
- 
   filterRow: {
-    flexDirection:     'row',
-    margin:            16,
-    backgroundColor:   '#fff',
-    borderRadius:      10,
-    padding:           4,
+    flexDirection: 'row', margin: 16,
+    backgroundColor: '#fff', borderRadius: 10, padding: 4,
   },
-  filterBtn: {
-    flex: 1, alignItems: 'center',
-    paddingVertical: 8, borderRadius: 8,
-  },
+  filterBtn:       { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
   filterBtnActive: { backgroundColor: '#34a853' },
   filterText:      { fontSize: 13, color: '#666', fontWeight: '600' },
   filterTextActive:{ color: '#fff' },
- 
   chartCard: {
-    backgroundColor:  '#fff',
-    borderRadius:     12,
-    padding:          16,
-    marginHorizontal: 16,
-    marginVertical:   8,
-    shadowColor:      '#000',
-    shadowOpacity:    0.06,
-    shadowRadius:     6,
-    elevation:        2,
+    backgroundColor: '#fff', borderRadius: 12, padding: 16,
+    marginHorizontal: 16, marginVertical: 8,
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
-  chartHeader: {
-    flexDirection: 'row', alignItems: 'center', marginBottom: 4,
-  },
-  chartIcon:   { fontSize: 18, marginRight: 8 },
-  chartTitle:  { fontSize: 15, fontWeight: '600', color: '#333', flex: 1 },
-  chartLatest: { fontSize: 18, fontWeight: '700' },
- 
+  chartHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  chartIcon:    { fontSize: 18, marginRight: 8 },
+  chartTitle:   { fontSize: 15, fontWeight: '600', color: '#333', flex: 1 },
+  chartLatest:  { fontSize: 18, fontWeight: '700' },
   noDataBox: {
     alignItems: 'center', paddingVertical: 30,
     backgroundColor: '#f9f9f9', borderRadius: 8, marginTop: 8,
   },
   noDataText: { fontSize: 14, color: '#999', fontWeight: '500' },
   noDataSub:  { fontSize: 12, color: '#bbb', marginTop: 4, textAlign: 'center' },
- 
   emptyState: { alignItems: 'center', padding: 40, marginTop: 20 },
   emptyIcon:  { fontSize: 48, marginBottom: 16 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 8 },

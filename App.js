@@ -47,8 +47,8 @@ export default function App() {
           }}
         />
         <Tab.Screen
-          name="DataLog"
-          component={DataLogScreen}
+          name="Datalog"
+          component={DatalogScreen}
           options={{
             tabBarLabel: 'Data Log',
             tabBarIcon: ({ focused }) => <TabIcon emoji="🗂️" focused={focused} />,
