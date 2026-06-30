@@ -4,18 +4,26 @@ import {
   View, Text, StyleSheet, ScrollView,
   ActivityIndicator, Dimensions, TouchableOpacity
 } from 'react-native';
+import {
+  FiRrChartLineUpSvg,
+  FiRrHumiditySvg,
+  FiRrLeafSvg,
+  FiRrSunSvg,
+  FiRrTemperatureHighSvg,
+} from 'react-native-icon-flaticon/lib/commonjs';
+import { FlaticonIcon, ICON_SIZES, ICON_SPACING } from '../components/FlaticonIcon';
 import { fetchReadings } from '../firebaseConfig';
 import { LineChart } from 'react-native-chart-kit';
 
 const screenWidth = Dimensions.get('window').width - 32;
 const FILTERS = ['1H', '6H', '24H', '7D'];
 
-const ChartCard = ({ title, icon, color, data, labels, unit }) => {
+const ChartCard = ({ title, Icon, color, data, labels, unit }) => {
   if (!data || data.length === 0) {
     return (
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
-          <Text style={styles.chartIcon}>{icon}</Text>
+          <FlaticonIcon Icon={Icon} size={ICON_SIZES.chart} color={color} style={styles.chartIcon} />
           <Text style={styles.chartTitle}>{title}</Text>
         </View>
         <View style={styles.noDataBox}>
@@ -29,7 +37,7 @@ const ChartCard = ({ title, icon, color, data, labels, unit }) => {
   return (
     <View style={styles.chartCard}>
       <View style={styles.chartHeader}>
-        <Text style={styles.chartIcon}>{icon}</Text>
+        <FlaticonIcon Icon={Icon} size={ICON_SIZES.chart} color={color} style={styles.chartIcon} />
         <Text style={styles.chartTitle}>{title}</Text>
         <Text style={[styles.chartLatest, { color }]}>{data[data.length - 1]}{unit}</Text>
       </View>
@@ -120,7 +128,12 @@ export default function AnalyticsScreen() {
 
       {readings.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>📊</Text>
+          <FlaticonIcon
+            Icon={FiRrChartLineUpSvg}
+            size={ICON_SIZES.empty}
+            color="#34a853"
+            style={styles.emptyIcon}
+          />
           <Text style={styles.emptyTitle}>No data collected yet</Text>
           <Text style={styles.emptyText}>
             Connect your ESP32 and start collecting data. Charts will populate automatically.
@@ -128,10 +141,10 @@ export default function AnalyticsScreen() {
         </View>
       ) : (
         <>
-          <ChartCard title="Temperature" icon="🌡️" color="#ea4335" unit="°C" data={extract('temperature')} labels={labels} />
-          <ChartCard title="Humidity"    icon="💧" color="#4285f4" unit="%" data={extract('humidity')}    labels={labels} />
-          <ChartCard title="Soil Moisture" icon="🌱" color="#34a853" unit="%" data={extract('soil_moisture')} labels={labels} />
-          <ChartCard title="Light Level" icon="☀️" color="#fbbc04" unit="%" data={extract('light_level')} labels={labels} />
+          <ChartCard title="Temperature" Icon={FiRrTemperatureHighSvg} color="#ea4335" unit="°C" data={extract('temperature')} labels={labels} />
+          <ChartCard title="Humidity"    Icon={FiRrHumiditySvg} color="#4285f4" unit="%" data={extract('humidity')} labels={labels} />
+          <ChartCard title="Soil Moisture" Icon={FiRrLeafSvg} color="#34a853" unit="%" data={extract('soil_moisture')} labels={labels} />
+          <ChartCard title="Light Level" Icon={FiRrSunSvg} color="#fbbc04" unit="%" data={extract('light_level')} labels={labels} />
         </>
       )}
       <View style={{ height: 30 }} />
@@ -163,7 +176,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
   chartHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  chartIcon:    { fontSize: 18, marginRight: 8 },
+  chartIcon:    { marginRight: ICON_SPACING.inline },
   chartTitle:   { fontSize: 15, fontWeight: '600', color: '#333', flex: 1 },
   chartLatest:  { fontSize: 18, fontWeight: '700' },
   noDataBox: {
@@ -173,7 +186,7 @@ const styles = StyleSheet.create({
   noDataText: { fontSize: 14, color: '#999', fontWeight: '500' },
   noDataSub:  { fontSize: 12, color: '#bbb', marginTop: 4, textAlign: 'center' },
   emptyState: { alignItems: 'center', padding: 40, marginTop: 20 },
-  emptyIcon:  { fontSize: 48, marginBottom: 16 },
+  emptyIcon:  { marginBottom: ICON_SPACING.emptyBottom },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 8 },
   emptyText:  { fontSize: 14, color: '#999', textAlign: 'center', lineHeight: 22 },
 });

@@ -4,6 +4,8 @@ import {
   View, Text, StyleSheet, FlatList,
   ActivityIndicator, TouchableOpacity
 } from 'react-native';
+import { FiRrFolderSvg } from 'react-native-icon-flaticon/lib/commonjs';
+import { FlaticonIcon, ICON_SIZES, ICON_SPACING } from '../components/FlaticonIcon';
 import { fetchReadings } from '../firebaseConfig';
 
 const LogRow = ({ item, index }) => {
@@ -71,7 +73,12 @@ export default function DataLogScreen() {
 
       {readings.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>🗂️</Text>
+          <FlaticonIcon
+            Icon={FiRrFolderSvg}
+            size={ICON_SIZES.empty}
+            color="#34a853"
+            style={styles.emptyIcon}
+          />
           <Text style={styles.emptyTitle}>No readings logged yet</Text>
           <Text style={styles.emptyText}>
             Every reading from the ESP32 will be recorded here with a timestamp.
@@ -126,7 +133,7 @@ const styles = StyleSheet.create({
   cell:     { flex: 1, fontSize: 12, textAlign: 'center', color: '#333' },
   cellTime: { flex: 1.4, color: '#666', fontSize: 11 },
   emptyState: { alignItems: 'center', padding: 40, marginTop: 40 },
-  emptyIcon:  { fontSize: 48, marginBottom: 16 },
+  emptyIcon:  { marginBottom: ICON_SPACING.emptyBottom },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 8 },
   emptyText:  { fontSize: 14, color: '#999', textAlign: 'center', lineHeight: 22 },
 });

@@ -3,12 +3,20 @@ import {
   View, Text, StyleSheet, ScrollView,
   ActivityIndicator, RefreshControl
 } from 'react-native';
+import {
+  FiRrHumiditySvg,
+  FiRrLeafSvg,
+  FiRrSunSvg,
+  FiRrTemperatureHighSvg,
+  FiRrWifiAltSvg,
+} from 'react-native-icon-flaticon/lib/commonjs';
+import { FlaticonIcon, ICON_SIZES, ICON_SPACING } from '../components/FlaticonIcon';
 import { fetchReadings } from '../firebaseConfig';
 
-const SensorCard = ({ title, value, unit, icon, color, subtitle }) => (
+const SensorCard = ({ title, value, unit, Icon, color, subtitle }) => (
   <View style={[styles.card, { borderLeftColor: color }]}>
     <View style={styles.cardHeader}>
-      <Text style={styles.cardIcon}>{icon}</Text>
+      <FlaticonIcon Icon={Icon} size={ICON_SIZES.card} color={color} style={styles.cardIcon} />
       <Text style={styles.cardTitle}>{title}</Text>
     </View>
     <Text style={[styles.cardValue, { color }]}>
@@ -112,7 +120,12 @@ export default function HomeScreen() {
 
       {!latestReading ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>📡</Text>
+          <FlaticonIcon
+            Icon={FiRrWifiAltSvg}
+            size={ICON_SIZES.empty}
+            color="#34a853"
+            style={styles.emptyIcon}
+          />
           <Text style={styles.emptyTitle}>Waiting for sensor data</Text>
           <Text style={styles.emptyText}>
             Once your ESP32 is connected and running, live readings will appear here automatically.
@@ -123,22 +136,22 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Live Readings</Text>
           <SensorCard
             title="Temperature" value={latestReading.temperature?.toFixed(1)}
-            unit="°C" icon="🌡️" color="#ea4335"
+            unit="°C" Icon={FiRrTemperatureHighSvg} color="#ea4335"
             subtitle={tempStatus(latestReading.temperature)}
           />
           <SensorCard
             title="Humidity" value={latestReading.humidity?.toFixed(1)}
-            unit="%" icon="💧" color="#4285f4"
+            unit="%" Icon={FiRrHumiditySvg} color="#4285f4"
             subtitle={humidStatus(latestReading.humidity)}
           />
           <SensorCard
             title="Soil Moisture" value={latestReading.soil_moisture}
-            unit="%" icon="🌱" color="#34a853"
+            unit="%" Icon={FiRrLeafSvg} color="#34a853"
             subtitle={soilStatus(latestReading.soil_moisture)}
           />
           <SensorCard
             title="Light Level" value={latestReading.light_level}
-            unit="%" icon="☀️" color="#fbbc04"
+            unit="%" Icon={FiRrSunSvg} color="#fbbc04"
             subtitle={lightStatus(latestReading.light_level)}
           />
         </>
@@ -173,13 +186,13 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
   cardHeader:   { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  cardIcon:     { fontSize: 20, marginRight: 8 },
+  cardIcon:     { marginRight: ICON_SPACING.inline },
   cardTitle:    { fontSize: 14, color: '#666', fontWeight: '500' },
   cardValue:    { fontSize: 36, fontWeight: '700' },
   cardUnit:     { fontSize: 16, fontWeight: '400', color: '#999' },
   cardSubtitle: { fontSize: 12, color: '#999', marginTop: 4 },
   emptyState:   { alignItems: 'center', padding: 40, marginTop: 40 },
-  emptyIcon:    { fontSize: 48, marginBottom: 16 },
+  emptyIcon:    { marginBottom: ICON_SPACING.emptyBottom },
   emptyTitle:   { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 8 },
   emptyText:    { fontSize: 14, color: '#999', textAlign: 'center', lineHeight: 22 },
 });

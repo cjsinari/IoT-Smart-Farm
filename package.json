@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
+    "@flaticon/flaticon-uicons": "^3.3.1",
     "@react-native-firebase/app": "^17.4.2",
     "@react-navigation/bottom-tabs": "^7.18.3",
     "@react-navigation/native": "^7.3.4",
@@ -12,6 +13,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
     "react-native-chart-kit": "^6.12.3",
+    "react-native-icon-flaticon": "^0.1.4",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.4",

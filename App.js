@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { FiRrChartLineUpSvg, FiRrFolderSvg, FiRrHomeSvg } from 'react-native-icon-flaticon/lib/commonjs';
+import { FlaticonIcon, ICON_SIZES } from './components/FlaticonIcon';
 
 import HomeScreen from './screens/HomeScreen';
 import AnalyticsScreen from './screens/AnalyticsScreen';
@@ -9,8 +10,12 @@ import DatalogScreen from './screens/DatalogScreen';
 
 const Tab = createBottomTabNavigator();
 
-const TabIcon = ({ emoji, focused }) => (
-  <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>
+const TabIcon = ({ Icon, focused }) => (
+  <FlaticonIcon
+    Icon={Icon}
+    size={ICON_SIZES.tab}
+    color={focused ? '#34a853' : '#999'}
+  />
 );
 
 export default function App() {
@@ -35,7 +40,7 @@ export default function App() {
           component={HomeScreen}
           options={{
             tabBarLabel: 'Live',
-            tabBarIcon: ({ focused }) => <TabIcon emoji="🌿" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIcon Icon={FiRrHomeSvg} focused={focused} />,
           }}
         />
         <Tab.Screen
@@ -43,7 +48,7 @@ export default function App() {
           component={AnalyticsScreen}
           options={{
             tabBarLabel: 'Analytics',
-            tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIcon Icon={FiRrChartLineUpSvg} focused={focused} />,
           }}
         />
         <Tab.Screen
@@ -51,7 +56,7 @@ export default function App() {
           component={DatalogScreen}
           options={{
             tabBarLabel: 'Data Log',
-            tabBarIcon: ({ focused }) => <TabIcon emoji="🗂️" focused={focused} />,
+            tabBarIcon: ({ focused }) => <TabIcon Icon={FiRrFolderSvg} focused={focused} />,
           }}
         />
       </Tab.Navigator>
